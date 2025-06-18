@@ -236,19 +236,42 @@ class NBANewsApp {
 
     // 渲染新闻列表
     renderNews() {
+        console.log('🎨 开始渲染新闻...');
+        console.log('📊 当前newsData:', this.newsData);
+        console.log('📈 数据条数:', this.newsData.length);
+        
+        // 显示前3条数据的标题用于调试
+        if (this.newsData.length > 0) {
+            console.log('🔍 前3条数据标题:');
+            this.newsData.slice(0, 3).forEach((item, index) => {
+                console.log(`  ${index + 1}. [${item.source}] ${item.title}`);
+            });
+        }
+        
         const newsGrid = document.getElementById('newsGrid');
         const scoresGrid = document.getElementById('scoresGrid');
         const scheduleGrid = document.getElementById('scheduleGrid');
         const emptyState = document.getElementById('emptyState');
         
-        if (!newsGrid) return;
+        console.log('🔍 DOM元素检查:');
+        console.log('  newsGrid:', newsGrid ? '✅ 找到' : '❌ 未找到');
+        console.log('  scoresGrid:', scoresGrid ? '✅ 找到' : '❌ 未找到');
+        console.log('  scheduleGrid:', scheduleGrid ? '✅ 找到' : '❌ 未找到');
+        
+        if (!newsGrid) {
+            console.error('❌ 找不到newsGrid元素，无法渲染');
+            return;
+        }
         
         // 清空现有内容
         newsGrid.innerHTML = '';
         if (scoresGrid) scoresGrid.innerHTML = '';
         if (scheduleGrid) scheduleGrid.innerHTML = '';
         
+        console.log('🧹 已清空所有容器');
+        
         if (this.newsData.length === 0) {
+            console.log('⚠️ 没有数据可显示');
             if (emptyState) {
                 emptyState.style.display = 'block';
             }
@@ -264,8 +287,14 @@ class NBANewsApp {
         const scoreItems = this.newsData.filter(item => item.type === 'score');
         const scheduleItems = this.newsData.filter(item => item.type === 'schedule');
         
+        console.log('📋 数据分类结果:');
+        console.log(`  新闻: ${newsItems.length} 条`);
+        console.log(`  比分: ${scoreItems.length} 条`);
+        console.log(`  赛程: ${scheduleItems.length} 条`);
+        
         // 渲染新闻卡片
         newsItems.forEach((article, index) => {
+            console.log(`🃏 渲染新闻卡片 ${index + 1}: ${article.title.substring(0, 50)}...`);
             const card = this.createNewsCard(article);
             card.classList.add('fade-in');
             card.style.animationDelay = `${index * 0.1}s`;
@@ -275,6 +304,7 @@ class NBANewsApp {
         // 渲染比分卡片
         if (scoresGrid) {
             scoreItems.forEach((score, index) => {
+                console.log(`🏆 渲染比分卡片 ${index + 1}: ${score.title.substring(0, 50)}...`);
                 const card = this.createScoreCard(score);
                 card.classList.add('fade-in');
                 card.style.animationDelay = `${index * 0.1}s`;
@@ -285,12 +315,15 @@ class NBANewsApp {
         // 渲染赛程卡片
         if (scheduleGrid) {
             scheduleItems.forEach((game, index) => {
+                console.log(`📅 渲染赛程卡片 ${index + 1}: ${game.title.substring(0, 50)}...`);
                 const card = this.createScheduleCard(game);
                 card.classList.add('fade-in');
                 card.style.animationDelay = `${index * 0.1}s`;
                 scheduleGrid.appendChild(card);
             });
         }
+        
+        console.log('✅ 新闻渲染完成!');
     }
 
     // 创建新闻卡片DOM元素

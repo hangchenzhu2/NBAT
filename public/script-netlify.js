@@ -502,7 +502,7 @@ class NBANewsApp {
                 <i class="fas fa-exclamation-triangle"></i>
                 <h3>Error Loading News</h3>
                 <p>${this.escapeHtml(message)}</p>
-                <button class="btn-primary" onclick="app.loadStaticData()">
+                <button class="btn-primary" onclick="loadNews()">
                     <i class="fas fa-sync-alt"></i>
                     Try Again
                 </button>
@@ -555,6 +555,6 @@ document.addEventListener('DOMContentLoaded', () => {
 // 全局函数供HTML调用
 function loadNews() {
     if (app) {
-        app.loadStaticData();
+        app.loadNews();
     }
 } 

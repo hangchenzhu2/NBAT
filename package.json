@@ -1,0 +1,30 @@
+{
+  "name": "nba-news-scraper",
+  "version": "1.2.0",
+  "description": "NBA篮球资讯抓取网站 - Netlify版本",
+  "main": "server.js",
+  "scripts": {
+    "start": "set PORT=3000 && node server.js",
+    "dev": "set PORT=3000 && nodemon server.js",
+    "build": "echo 'Build complete for Netlify'",
+    "netlify-dev": "netlify dev",
+    "test": "echo 'No tests specified'"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0-rc.12",
+    "node-cron": "^3.0.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "netlify-cli": "^17.0.0"
+  },
+  "keywords": ["nba", "basketball", "news", "scraper", "netlify"],
+  "author": "NBA News Scraper",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+} 

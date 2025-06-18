@@ -1,0 +1,14 @@
+# NBA News Hub - robots.txt
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://nba-news-hub.netlify.app/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 10
+
+# Disallow
+Disallow: /functions/
+Disallow: /node_modules/
+Disallow: /.netlify/ 

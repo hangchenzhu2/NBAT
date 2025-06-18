@@ -3,231 +3,238 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NBA News Hub - Debug</title>
+    <title>NBA News - Debug Console</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
-            background: #f5f5f5;
+            background: #1a1a1a;
+            color: #fff;
         }
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
-            background: white;
+        }
+        .debug-section {
+            background: #2a2a2a;
+            margin: 20px 0;
             padding: 20px;
-            border-radius: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #007acc;
         }
-        .status {
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            font-weight: bold;
-        }
-        .success { background: #d4edda; color: #155724; }
-        .error { background: #f8d7da; color: #721c24; }
-        .warning { background: #fff3cd; color: #856404; }
-        .info { background: #d1ecf1; color: #0c5460; }
-        button {
-            background: #007bff;
+        .btn {
+            background: #007acc;
             color: white;
-            border: none;
             padding: 10px 20px;
-            border-radius: 5px;
+            border: none;
+            border-radius: 4px;
             cursor: pointer;
             margin: 5px;
         }
-        button:hover { background: #0056b3; }
-        #log {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
+        .btn:hover {
+            background: #005a9e;
+        }
+        .btn.danger {
+            background: #dc3545;
+        }
+        .btn.danger:hover {
+            background: #c82333;
+        }
+        .log {
+            background: #000;
+            color: #0f0;
             padding: 15px;
-            border-radius: 5px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
             max-height: 400px;
             overflow-y: auto;
-            font-family: monospace;
-            font-size: 12px;
-            white-space: pre-wrap;
-        }
-        .news-item {
-            border: 1px solid #ddd;
             margin: 10px 0;
-            padding: 15px;
-            border-radius: 5px;
-            background: #f9f9f9;
         }
-        .news-title {
-            font-weight: bold;
-            margin-bottom: 5px;
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
         }
-        .news-link {
-            color: #007bff;
-            text-decoration: none;
-            word-break: break-all;
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
         }
-        .news-link:hover {
-            text-decoration: underline;
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🏀 NBA News Hub - 调试页面</h1>
+        <h1>🏀 NBA News Debug Console</h1>
         
-        <div class="status info">
-            📊 这个页面用于诊断API和数据抓取问题
+        <div class="debug-section">
+            <h2>📡 API 测试</h2>
+            <button class="btn" onclick="testAPI()">测试 /api/news</button>
+            <button class="btn" onclick="testFunctions()">测试 /.netlify/functions/news</button>
+            <button class="btn danger" onclick="clearLog()">清空日志</button>
+            
+            <div id="apiStatus" class="status" style="display: none;"></div>
+            <div id="apiLog" class="log"></div>
         </div>
         
-        <h3>测试功能：</h3>
-        <button onclick="testAPI()">测试API端点</button>
-        <button onclick="testFallbackData()">测试后备数据</button>
-        <button onclick="testDirectLinks()">测试直接链接</button>
-        <button onclick="clearLog()">清空日志</button>
+        <div class="debug-section">
+            <h2>🔍 环境信息</h2>
+            <div id="envInfo" class="log"></div>
+        </div>
         
-        <div id="results"></div>
-        
-        <h3>调试日志：</h3>
-        <div id="log"></div>
-        
-        <h3>新闻数据：</h3>
-        <div id="newsData"></div>
+        <div class="debug-section">
+            <h2>📊 数据预览</h2>
+            <div id="dataPreview" class="log"></div>
+        </div>
     </div>
 
     <script>
-        const log = document.getElementById('log');
-        const results = document.getElementById('results');
-        const newsData = document.getElementById('newsData');
+        let logContent = '';
         
-        function addLog(message, type = 'info') {
+        function log(message) {
             const timestamp = new Date().toLocaleTimeString();
-            log.textContent += `[${timestamp}] ${message}\n`;
-            log.scrollTop = log.scrollHeight;
-        }
-        
-        function addResult(message, type) {
-            const result = document.createElement('div');
-            result.className = `status ${type}`;
-            result.innerHTML = message;
-            results.appendChild(result);
+            logContent += `[${timestamp}] ${message}\n`;
+            document.getElementById('apiLog').textContent = logContent;
+            console.log(message);
         }
         
         function clearLog() {
-            log.textContent = '';
-            results.innerHTML = '';
-            newsData.innerHTML = '';
+            logContent = '';
+            document.getElementById('apiLog').textContent = '';
+            document.getElementById('apiStatus').style.display = 'none';
+        }
+        
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('apiStatus');
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+            statusEl.style.display = 'block';
         }
         
         async function testAPI() {
-            addLog('开始测试API端点...');
+            log('🚀 开始测试 /api/news...');
+            clearStatus();
             
             try {
-                addLog('请求: /api/news');
+                const startTime = Date.now();
                 const response = await fetch('/api/news', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+                
+                const duration = Date.now() - startTime;
+                log(`📊 响应时间: ${duration}ms`);
+                log(`📋 状态码: ${response.status} ${response.statusText}`);
+                log(`📄 响应头: ${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ 响应数据: ${JSON.stringify(data, null, 2)}`);
+                    
+                    if (data.success && data.data) {
+                        showStatus(`✅ API测试成功! 获取到 ${data.data.length} 条数据`, 'success');
+                        updateDataPreview(data.data);
+                    } else {
+                        showStatus('⚠️ API返回格式异常', 'warning');
+                    }
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ 错误响应: ${errorText}`);
+                    showStatus(`❌ API测试失败: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log(`💥 API调用异常: ${error.message}`);
+                log(`🔍 错误堆栈: ${error.stack}`);
+                showStatus(`💥 API调用异常: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testFunctions() {
+            log('🚀 开始测试 /.netlify/functions/news...');
+            clearStatus();
+            
+            try {
+                const startTime = Date.now();
+                const response = await fetch('/.netlify/functions/news', {
+                    method: 'GET',
                     headers: {
                         'Accept': 'application/json',
                         'Content-Type': 'application/json'
                     }
                 });
                 
-                addLog(`响应状态: ${response.status} ${response.statusText}`);
+                const duration = Date.now() - startTime;
+                log(`📊 响应时间: ${duration}ms`);
+                log(`📋 状态码: ${response.status} ${response.statusText}`);
                 
                 if (response.ok) {
                     const data = await response.json();
-                    addLog(`响应数据: ${JSON.stringify(data, null, 2)}`);
-                    
-                    if (data.success && data.data) {
-                        addResult(`✅ API正常工作，获取到 ${data.data.length} 条数据`, 'success');
-                        displayNewsData(data.data);
-                    } else {
-                        addResult(`⚠️ API响应格式异常`, 'warning');
-                    }
+                    log(`✅ Functions响应: ${JSON.stringify(data, null, 2)}`);
+                    showStatus(`✅ Functions测试成功! 获取到 ${data.data?.length || 0} 条数据`, 'success');
                 } else {
                     const errorText = await response.text();
-                    addLog(`错误响应: ${errorText}`);
-                    addResult(`❌ API请求失败: ${response.status}`, 'error');
+                    log(`❌ Functions错误: ${errorText}`);
+                    showStatus(`❌ Functions测试失败: ${response.status}`, 'error');
                 }
-                
             } catch (error) {
-                addLog(`API请求异常: ${error.message}`);
-                addResult(`❌ API不可用: ${error.message}`, 'error');
+                log(`💥 Functions调用异常: ${error.message}`);
+                showStatus(`💥 Functions异常: ${error.message}`, 'error');
             }
         }
         
-        function testFallbackData() {
-            addLog('测试后备数据...');
-            
-            if (window.NBA_NEWS_DATA) {
-                const totalItems = (window.NBA_NEWS_DATA.news || []).length + 
-                                 (window.NBA_NEWS_DATA.scores || []).length + 
-                                 (window.NBA_NEWS_DATA.schedule || []).length;
-                
-                addResult(`✅ 后备数据可用，共 ${totalItems} 条`, 'success');
-                addLog(`后备数据: ${JSON.stringify(window.NBA_NEWS_DATA, null, 2)}`);
-                
-                // 合并所有数据
-                const allData = [];
-                if (window.NBA_NEWS_DATA.news) allData.push(...window.NBA_NEWS_DATA.news);
-                if (window.NBA_NEWS_DATA.scores) allData.push(...window.NBA_NEWS_DATA.scores);
-                if (window.NBA_NEWS_DATA.schedule) allData.push(...window.NBA_NEWS_DATA.schedule);
-                
-                displayNewsData(allData);
-            } else {
-                addResult(`❌ 后备数据不可用`, 'error');
-                addLog('window.NBA_NEWS_DATA 未定义');
-            }
+        function clearStatus() {
+            document.getElementById('apiStatus').style.display = 'none';
         }
         
-        async function testDirectLinks() {
-            addLog('测试直接链接可访问性...');
+        function updateDataPreview(data) {
+            const preview = data.slice(0, 3).map(item => ({
+                title: item.title?.substring(0, 50) + '...',
+                source: item.source,
+                type: item.type,
+                link: item.link
+            }));
             
-            const testLinks = [
-                'https://www.nba.com/news/pacers-trade-mojave-king-23-pick-2025-draft-pelicans',
-                'https://www.nba.com/news/finals-mvp-ladder-sga-closing-award',
-                'https://www.espn.com/nba/story/_/id/45041634/2025-nba-draft-complete-order-all-59-picks'
-            ];
-            
-            for (const link of testLinks) {
-                try {
-                    addLog(`测试链接: ${link}`);
-                    const response = await fetch(link, { 
-                        method: 'HEAD',
-                        mode: 'no-cors'
-                    });
-                    addLog(`链接状态: ${response.status || '可访问(no-cors)'}`);
-                } catch (error) {
-                    addLog(`链接错误: ${error.message}`);
-                }
-            }
+            document.getElementById('dataPreview').textContent = 
+                JSON.stringify(preview, null, 2);
         }
         
-        function displayNewsData(data) {
-            newsData.innerHTML = '';
+        // 初始化环境信息
+        function initEnvInfo() {
+            const envInfo = {
+                userAgent: navigator.userAgent,
+                location: window.location.href,
+                timestamp: new Date().toISOString(),
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                language: navigator.language
+            };
             
-            if (!data || data.length === 0) {
-                newsData.innerHTML = '<div class="status warning">没有数据可显示</div>';
-                return;
-            }
-            
-            data.forEach((item, index) => {
-                const newsItem = document.createElement('div');
-                newsItem.className = 'news-item';
-                newsItem.innerHTML = `
-                    <div class="news-title">${index + 1}. [${item.source}] ${item.title}</div>
-                    <div>📅 ${item.date} | 🏷️ ${item.type}</div>
-                    <div>🔗 <a href="${item.link}" target="_blank" class="news-link">${item.link}</a></div>
-                `;
-                newsData.appendChild(newsItem);
-            });
+            document.getElementById('envInfo').textContent = 
+                JSON.stringify(envInfo, null, 2);
         }
         
-        // 页面加载时自动测试
-        window.addEventListener('load', function() {
-            addLog('页面加载完成');
-            
-            // 检查当前页面是否显示的是后备数据
-            if (document.querySelector('.status-info span[id="newsCount"]')) {
-                const newsCountText = document.querySelector('#newsCount').textContent;
-                addLog(`主页面状态: ${newsCountText}`);
-            }
+        // 页面加载时初始化
+        window.addEventListener('load', () => {
+            initEnvInfo();
+            log('🔧 Debug控制台已就绪');
         });
     </script>
 </body>

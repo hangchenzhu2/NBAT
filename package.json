@@ -1,7 +1,7 @@
 {
   "name": "nba-news-scraper",
-  "version": "1.4.0",
-  "description": "NBA篮球资讯抓取网站 - Netlify版本",
+  "version": "1.5.0",
+  "description": "NBA新闻聚合器 - 实时获取NBA官网和ESPN的最新新闻、比分和赛程信息",
   "main": "server.js",
   "scripts": {
     "start": "set PORT=3000 && node server.js",

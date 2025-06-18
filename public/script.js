@@ -97,38 +97,55 @@ class NBANewsApp {
                 this.showLoading(true);
             }
             
-            console.log('正在加载NBA新闻...');
+            console.log('🚀 开始加载NBA新闻...');
             
             // 首先尝试API调用
             try {
+                console.log('📡 尝试API调用: /api/news');
                 const response = await fetch('/api/news', {
+                    method: 'GET',
                     headers: {
                         'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    },
-                    timeout: 10000
+                        'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    }
                 });
+                
+                console.log('📊 API响应状态:', response.status, response.statusText);
+                console.log('📋 响应头:', Object.fromEntries(response.headers.entries()));
                 
                 if (response.ok) {
                     const result = await response.json();
+                    console.log('✅ API响应数据:', result);
                     
                     if (result.success && result.data && result.data.length > 0) {
                         this.newsData = result.data;
                         this.renderNews();
                         this.updateStatus(this.newsData.length, result.timestamp);
-                        console.log(`成功从API加载 ${this.newsData.length} 条新闻`);
+                        console.log(`🎯 成功从API加载 ${this.newsData.length} 条新闻`);
+                        
+                        // 在页面顶部显示成功状态
+                        this.showToast(`✅ 成功加载 ${this.newsData.length} 条真实NBA新闻`, 'success');
                         return;
+                    } else {
+                        console.warn('⚠️ API返回数据无效:', result);
                     }
+                } else {
+                    console.error('❌ API响应失败:', response.status, response.statusText);
+                    const errorText = await response.text();
+                    console.error('错误详情:', errorText);
                 }
             } catch (apiError) {
-                console.warn('API调用失败，使用后备数据:', apiError.message);
+                console.error('🔥 API调用异常:', apiError);
+                console.error('错误堆栈:', apiError.stack);
             }
             
             // API失败时使用后备数据
+            console.log('🔄 API失败，使用后备数据...');
             this.loadFallbackData();
             
         } catch (error) {
-            console.error('加载新闻时出错:', error);
+            console.error('💥 加载新闻时出错:', error);
             this.loadFallbackData();
         } finally {
             if (showLoader) {
@@ -139,7 +156,7 @@ class NBANewsApp {
 
     // 加载后备数据
     loadFallbackData() {
-        console.log('使用后备静态数据...');
+        console.log('📂 使用后备静态数据...');
         
         // 检查是否有全局数据
         if (window.NBA_NEWS_DATA) {
@@ -160,7 +177,10 @@ class NBANewsApp {
                 this.newsData = fallbackData;
                 this.renderNews();
                 this.updateStatus(this.newsData.length, new Date().toISOString());
-                console.log(`成功加载后备数据 ${this.newsData.length} 条`);
+                console.log(`📋 成功加载后备数据 ${this.newsData.length} 条`);
+                
+                // 显示后备数据警告
+                this.showToast(`⚠️ API连接失败，显示后备数据 (${this.newsData.length}条)`, 'warning');
                 return;
             }
         }

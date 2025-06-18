@@ -10,7 +10,12 @@ class NBANewsApp {
     init() {
         this.bindEvents();
         this.setupTabs();
-        this.loadStaticData();
+        this.loadNews();
+        
+        // 每5分钟自动刷新一次页面数据
+        setInterval(() => {
+            this.loadNews(false); // 静默刷新
+        }, 5 * 60 * 1000);
     }
 
     // 绑定事件监听器
@@ -54,7 +59,108 @@ class NBANewsApp {
         }, 100);
     }
 
-    // 加载静态数据
+    // 从API加载新闻数据
+    async loadNews(showLoader = true) {
+        if (this.isLoading) return;
+        
+        try {
+            if (showLoader) {
+                this.showLoading(true);
+            }
+            
+            console.log('🚀 开始加载NBA新闻...');
+            
+            // 首先尝试API调用
+            try {
+                console.log('📡 尝试API调用: /api/news');
+                const response = await fetch('/api/news', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+                
+                console.log('📊 API响应状态:', response.status, response.statusText);
+                console.log('📋 响应头:', Object.fromEntries(response.headers.entries()));
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('✅ API响应数据:', result);
+                    
+                    if (result.success && result.data && result.data.length > 0) {
+                        this.newsData = result.data;
+                        this.renderNews();
+                        this.updateStatus(this.newsData.length, result.timestamp);
+                        console.log(`🎯 成功从API加载 ${this.newsData.length} 条新闻`);
+                        
+                        // 在页面顶部显示成功状态
+                        this.showToast(`✅ 成功加载 ${this.newsData.length} 条真实NBA新闻`, 'success');
+                        return;
+                    } else {
+                        console.warn('⚠️ API返回数据无效:', result);
+                    }
+                } else {
+                    console.error('❌ API响应失败:', response.status, response.statusText);
+                    const errorText = await response.text();
+                    console.error('错误详情:', errorText);
+                }
+            } catch (apiError) {
+                console.error('🔥 API调用异常:', apiError);
+                console.error('错误堆栈:', apiError.stack);
+            }
+            
+            // API失败时使用后备数据
+            console.log('🔄 API失败，使用后备数据...');
+            this.loadFallbackData();
+            
+        } catch (error) {
+            console.error('💥 加载新闻时出错:', error);
+            this.loadFallbackData();
+        } finally {
+            if (showLoader) {
+                this.showLoading(false);
+            }
+        }
+    }
+
+    // 加载后备数据
+    loadFallbackData() {
+        console.log('📂 使用后备静态数据...');
+        
+        // 检查是否有全局数据
+        if (window.NBA_NEWS_DATA) {
+            const fallbackData = [];
+            
+            // 合并所有类型的数据
+            if (window.NBA_NEWS_DATA.news) {
+                fallbackData.push(...window.NBA_NEWS_DATA.news);
+            }
+            if (window.NBA_NEWS_DATA.scores) {
+                fallbackData.push(...window.NBA_NEWS_DATA.scores);
+            }
+            if (window.NBA_NEWS_DATA.schedule) {
+                fallbackData.push(...window.NBA_NEWS_DATA.schedule);
+            }
+            
+            if (fallbackData.length > 0) {
+                this.newsData = fallbackData;
+                this.renderNews();
+                this.updateStatus(this.newsData.length, new Date().toISOString());
+                console.log(`📋 成功加载后备数据 ${this.newsData.length} 条`);
+                
+                // 显示后备数据警告
+                this.showToast(`⚠️ API连接失败，显示后备数据 (${this.newsData.length}条)`, 'warning');
+                return;
+            }
+        }
+        
+        // 如果没有后备数据，显示错误状态
+        this.showError('Unable to load NBA news. Please check your connection and try again.');
+    }
+
+    // 加载静态数据（保留旧方法作为备用）
     loadStaticData() {
         console.log('加载静态NBA数据...');
         
@@ -75,17 +181,49 @@ class NBANewsApp {
         }
     }
 
-    // 手动刷新数据（静态版本）
-    refreshNews() {
-        console.log('刷新静态数据...');
-        this.showLoading(true);
+    // 手动刷新新闻
+    async refreshNews() {
+        if (this.isLoading) return;
         
-        // 模拟API调用延迟
-        setTimeout(() => {
-            this.loadStaticData();
+        try {
+            this.showLoading(true);
+            console.log('手动刷新新闻...');
+            
+            // 首先尝试刷新API
+            try {
+                const response = await fetch('/api/refresh', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    timeout: 15000
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // 刷新成功后重新加载数据
+                        await this.loadNews(false);
+                        this.showToast('News refreshed successfully!', 'success');
+                        return;
+                    }
+                }
+            } catch (refreshError) {
+                console.warn('API刷新失败:', refreshError.message);
+            }
+            
+            // API刷新失败时，重新加载后备数据
+            this.loadFallbackData();
+            this.showToast('Using cached data. Please try again later.', 'warning');
+            
+        } catch (error) {
+            console.error('刷新新闻时出错:', error);
+            this.showToast('Failed to refresh news. Please try again.', 'error');
+        } finally {
             this.showLoading(false);
-            this.showToast('News refreshed successfully!', 'success');
-        }, 1000);
+        }
     }
 
     // 显示加载状态
@@ -118,19 +256,42 @@ class NBANewsApp {
 
     // 渲染新闻列表
     renderNews() {
+        console.log('🎨 开始渲染新闻...');
+        console.log('📊 当前newsData:', this.newsData);
+        console.log('📈 数据条数:', this.newsData.length);
+        
+        // 显示前3条数据的标题用于调试
+        if (this.newsData.length > 0) {
+            console.log('🔍 前3条数据标题:');
+            this.newsData.slice(0, 3).forEach((item, index) => {
+                console.log(`  ${index + 1}. [${item.source}] ${item.title}`);
+            });
+        }
+        
         const newsGrid = document.getElementById('newsGrid');
         const scoresGrid = document.getElementById('scoresGrid');
         const scheduleGrid = document.getElementById('scheduleGrid');
         const emptyState = document.getElementById('emptyState');
         
-        if (!newsGrid) return;
+        console.log('🔍 DOM元素检查:');
+        console.log('  newsGrid:', newsGrid ? '✅ 找到' : '❌ 未找到');
+        console.log('  scoresGrid:', scoresGrid ? '✅ 找到' : '❌ 未找到');
+        console.log('  scheduleGrid:', scheduleGrid ? '✅ 找到' : '❌ 未找到');
+        
+        if (!newsGrid) {
+            console.error('❌ 找不到newsGrid元素，无法渲染');
+            return;
+        }
         
         // 清空现有内容
         newsGrid.innerHTML = '';
         if (scoresGrid) scoresGrid.innerHTML = '';
         if (scheduleGrid) scheduleGrid.innerHTML = '';
         
+        console.log('🧹 已清空所有容器');
+        
         if (this.newsData.length === 0) {
+            console.log('⚠️ 没有数据可显示');
             if (emptyState) {
                 emptyState.style.display = 'block';
             }
@@ -146,8 +307,14 @@ class NBANewsApp {
         const scoreItems = this.newsData.filter(item => item.type === 'score');
         const scheduleItems = this.newsData.filter(item => item.type === 'schedule');
         
+        console.log('📋 数据分类结果:');
+        console.log(`  新闻: ${newsItems.length} 条`);
+        console.log(`  比分: ${scoreItems.length} 条`);
+        console.log(`  赛程: ${scheduleItems.length} 条`);
+        
         // 渲染新闻卡片
         newsItems.forEach((article, index) => {
+            console.log(`🃏 渲染新闻卡片 ${index + 1}: ${article.title.substring(0, 50)}...`);
             const card = this.createNewsCard(article);
             card.classList.add('fade-in');
             card.style.animationDelay = `${index * 0.1}s`;
@@ -157,6 +324,7 @@ class NBANewsApp {
         // 渲染比分卡片
         if (scoresGrid) {
             scoreItems.forEach((score, index) => {
+                console.log(`🏆 渲染比分卡片 ${index + 1}: ${score.title.substring(0, 50)}...`);
                 const card = this.createScoreCard(score);
                 card.classList.add('fade-in');
                 card.style.animationDelay = `${index * 0.1}s`;
@@ -167,12 +335,15 @@ class NBANewsApp {
         // 渲染赛程卡片
         if (scheduleGrid) {
             scheduleItems.forEach((game, index) => {
+                console.log(`📅 渲染赛程卡片 ${index + 1}: ${game.title.substring(0, 50)}...`);
                 const card = this.createScheduleCard(game);
                 card.classList.add('fade-in');
                 card.style.animationDelay = `${index * 0.1}s`;
                 scheduleGrid.appendChild(card);
             });
         }
+        
+        console.log('✅ 新闻渲染完成!');
     }
 
     // 创建新闻卡片DOM元素

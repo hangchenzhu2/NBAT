@@ -1,76 +1,75 @@
-// NBA新闻数据 - 前端版本
+// NBA新闻数据 - 前端版本 (基于真实NBA官网内容)
 window.NBA_NEWS_DATA = {
   news: [
-    // ESPN NBA 新闻
+    // 基于NBA官网Top Stories的真实新闻
     {
-      title: 'Pacers rally in Game 3 to grab 2-1 Finals lead over Thunder',
-      link: 'https://www.espn.com/nba/story/_/id/41234567/pacers-rally-game-3-grab-2-1-finals-lead-thunder',
+      title: 'Pacers trade Mojave King and No. 23 pick in 2025 Draft to Pelicans',
+      link: 'https://www.nba.com/news/pacers-trade-mojave-king-23-pick-2025-draft-pelicans',
       date: '1 hour ago',
-      source: 'ESPN NBA',
+      source: 'NBA Official',
       timestamp: new Date().toISOString(),
       type: 'news'
     },
     {
-      title: 'Bennedict Mathurin drops 27 points off bench in Pacers Game 3 win',
-      link: 'https://www.espn.com/nba/story/_/id/41234568/mathurin-27-points-bench-pacers-game-3-win',
-      date: '2 hours ago',
-      source: 'ESPN NBA',
-      timestamp: new Date().toISOString(),
-      type: 'news'
-    },
-    {
-      title: 'Thunder\'s Shai Gilgeous-Alexander stifled by Pacers defense in Game 3',
-      link: 'https://www.espn.com/nba/story/_/id/41234569/thunder-sga-stifled-pacers-defense-game-3',
-      date: '3 hours ago',
-      source: 'ESPN NBA',
-      timestamp: new Date().toISOString(),
-      type: 'news'
-    },
-    // NBA Official 新闻
-    {
-      title: '5 takeaways: Pacers stifle SGA, ride bench to Game 3 win',
-      link: 'https://www.nba.com/news/5-takeaways-pacers-stifle-sga-ride-bench-game-3-win',
+      title: 'NBA Finals MVP Ladder: Legendary Finals run keeps Shai Gilgeous-Alexander on top',
+      link: 'https://www.nba.com/news/finals-mvp-ladder-sga-closing-award',
       date: '2 hours ago',
       source: 'NBA Official',
       timestamp: new Date().toISOString(),
       type: 'news'
     },
     {
-      title: 'Turning Point: Pacers\' big men come through in 4th',
-      link: 'https://www.nba.com/news/turning-point-pacers-big-men-come-through-4th',
+      title: 'Thirteen additional early entry candidates withdraw from 2025 NBA Draft',
+      link: 'https://www.nba.com/news/13-more-early-entry-prospects-withdraw-2025-draft',
       date: '3 hours ago',
       source: 'NBA Official',
       timestamp: new Date().toISOString(),
       type: 'news'
     },
     {
-      title: 'Full Focus: Pacers rally in Game 3 to grab 2-1 lead',
-      link: 'https://www.nba.com/news/full-focus-pacers-rally-game-3-grab-2-1-lead',
+      title: 'The Athletic: Isaiah Hartenstein provides the key to unlock the Thunder offense in Game 5',
+      link: 'https://www.nba.com/news/athletic-hartenstein-unlocks-okc-offense',
       date: '4 hours ago',
       source: 'NBA Official',
       timestamp: new Date().toISOString(),
       type: 'news'
     },
     {
-      title: 'Mathurin, McConnell provide historic boost',
-      link: 'https://www.nba.com/news/mathurin-mcconnell-provide-historic-boost',
+      title: 'Finals Film Study: Thunder find transition points in Game 5',
+      link: 'https://www.nba.com/news/finals-film-study-okc-gets-out-transition',
       date: '5 hours ago',
       source: 'NBA Official',
       timestamp: new Date().toISOString(),
       type: 'news'
     },
     {
-      title: 'Celtics\' Brown undergoes arthroscopic knee surgery',
-      link: 'https://www.nba.com/news/celtics-brown-undergoes-arthroscopic-knee-surgery',
+      title: 'LeBron James feeling \'good\' as he begins prepping for 23rd NBA season',
+      link: 'https://www.nba.com/news/lebron-says-left-knee-feeling-good',
       date: '6 hours ago',
       source: 'NBA Official',
       timestamp: new Date().toISOString(),
       type: 'news'
     },
     {
-      title: 'Wembanyama heads to Shaolin temple in China',
-      link: 'https://www.nba.com/news/wembanyama-heads-shaolin-temple-china',
+      title: 'Thunder-Pacers: 5 takeaways as Jalen Williams carries OKC to brink of 1st championship',
+      link: 'https://www.nba.com/news/5-takeaways-williams-leads-okc-brink-title',
+      date: '7 hours ago',
+      source: 'NBA Official',
+      timestamp: new Date().toISOString(),
+      type: 'news'
+    },
+    {
+      title: 'Turning Point: Tyrese Haliburton fails to launch as he fights through injury',
+      link: 'https://www.nba.com/news/turning-point-haliburton-fades-game-5',
       date: '8 hours ago',
+      source: 'NBA Official',
+      timestamp: new Date().toISOString(),
+      type: 'news'
+    },
+    {
+      title: 'Pacers\' Tyrese Haliburton struggles through apparent leg injury in Game 5',
+      link: 'https://www.nba.com/news/haliburton-plays-through-apparent-injury-game-5',
+      date: '9 hours ago',
       source: 'NBA Official',
       timestamp: new Date().toISOString(),
       type: 'news'

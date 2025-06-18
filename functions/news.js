@@ -1,30 +1,31 @@
 const axios = require('axios');
+const cheerio = require('cheerio');
 
 // NBA新闻和数据抓取类 - Netlify Functions版本
 class NBAScraper {
   constructor() {
-    // NBA官方API和RSS源
+    // NBA官方网站和ESPN新闻源
     this.dataSources = {
-      // 免费的NBA数据API
+      // 网页抓取源
       news: [
         {
-          name: 'NBA RSS',
-          url: 'https://feeds.nbcsnews.com/rss-feeds/',
-          type: 'rss'
+          name: 'NBA Official',
+          url: 'https://www.nba.com/news/category/top-stories',
+          type: 'scrape'
         },
         {
           name: 'ESPN NBA',
-          url: 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/news',
-          type: 'api'
+          url: 'https://www.espn.com/nba/',
+          type: 'scrape'
         }
       ],
-      // NBA比分数据
+      // NBA比分数据 (保留API)
       scores: {
         name: 'NBA Scores API',
         url: 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard',
         type: 'api'
       },
-      // NBA赛程数据
+      // NBA赛程数据 (保留API)
       schedule: {
         name: 'NBA Schedule API',
         url: 'https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=',
@@ -38,29 +39,140 @@ class NBAScraper {
     try {
       console.log('正在获取NBA新闻...');
       
-      const response = await axios.get(this.dataSources.news[1].url, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          'Accept': 'application/json'
-        },
-        timeout: 15000
-      });
+      const allNews = [];
+      
+      // 抓取NBA官方新闻
+      try {
+        const nbaResponse = await axios.get(this.dataSources.news[0].url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1'
+          },
+          timeout: 15000
+        });
 
-      if (response.data && response.data.articles) {
-        const articles = response.data.articles.slice(0, 10).map(article => ({
-          title: article.headline || article.title,
-          link: article.links?.web?.href || '#',
-          date: this.formatDate(article.published),
-          source: 'ESPN NBA',
-          timestamp: new Date().toISOString(),
-          type: 'news'
-        }));
-        
-        console.log(`成功获取 ${articles.length} 条NBA新闻`);
-        return articles;
+        if (nbaResponse.data) {
+          const $ = cheerio.load(nbaResponse.data);
+          
+          // 根据NBA官网Top Stories页面的结构抓取新闻
+          // 从你提供的网页内容可以看到是以文章列表形式存在
+          $('article, .story, .news-item, .content-item, li').each((index, element) => {
+            if (index >= 10) return; // 限制数量
+            
+            const $el = $(element);
+            
+            // 查找标题 - NBA官网可能使用不同的结构
+            let titleEl = $el.find('h1, h2, h3, h4, .title, .headline, a[href*="/news/"]').first();
+            let linkEl = $el.find('a[href*="/news/"], a[href*="/story/"]').first();
+            
+            // 如果当前元素本身就是链接
+            if ($el.is('a') && $el.attr('href') && $el.attr('href').includes('/news/')) {
+              linkEl = $el;
+              titleEl = $el;
+            }
+            
+            const title = titleEl.text().trim();
+            const link = linkEl.attr('href');
+            
+            if (title && link && title.length > 10) { // 确保标题有意义
+              const fullLink = link.startsWith('http') ? link : `https://www.nba.com${link}`;
+              
+              // 避免重复
+              const isDuplicate = allNews.some(news => 
+                news.title.toLowerCase().includes(title.toLowerCase().substring(0, 20)) ||
+                news.link === fullLink
+              );
+              
+              if (!isDuplicate) {
+                allNews.push({
+                  title: title,
+                  link: fullLink,
+                  date: 'Today',
+                  source: 'NBA Official',
+                  timestamp: new Date().toISOString(),
+                  type: 'news'
+                });
+              }
+            }
+          });
+          
+          console.log(`从NBA官网获取到 ${allNews.length} 条新闻`);
+        }
+      } catch (nbaError) {
+        console.error('抓取NBA官网新闻失败:', nbaError.message);
       }
       
-      return [];
+      // 抓取ESPN新闻
+      try {
+        const espnResponse = await axios.get(this.dataSources.news[1].url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1'
+          },
+          timeout: 15000
+        });
+
+        if (espnResponse.data) {
+          const $ = cheerio.load(espnResponse.data);
+          
+          // 根据ESPN NBA页面的结构抓取新闻
+          $('.contentItem, .story, .news-feed-item, article, .headlineStack__item, .contentItem__content').each((index, element) => {
+            if (index >= 10) return; // 限制数量
+            
+            const $el = $(element);
+            
+            // ESPN可能有不同的标题和链接结构
+            let titleEl = $el.find('h1, h2, h3, h4, .contentItem__title, .story__title, .headlineStack__title').first();
+            let linkEl = $el.find('a[href*="/nba/"], a[href*="/story/"]').first();
+            
+            // 如果当前元素本身就是链接
+            if ($el.is('a') && $el.attr('href') && $el.attr('href').includes('/nba/')) {
+              linkEl = $el;
+              titleEl = $el;
+            }
+            
+            const title = titleEl.text().trim();
+            const link = linkEl.attr('href');
+            
+            if (title && link && title.length > 10) { // 确保标题有意义
+              const fullLink = link.startsWith('http') ? link : `https://www.espn.com${link}`;
+              
+              // 避免重复
+              const isDuplicate = allNews.some(news => 
+                news.title.toLowerCase().includes(title.toLowerCase().substring(0, 20)) ||
+                news.link === fullLink
+              );
+              
+              if (!isDuplicate) {
+                allNews.push({
+                  title: title,
+                  link: fullLink,
+                  date: 'Today',
+                  source: 'ESPN NBA',
+                  timestamp: new Date().toISOString(),
+                  type: 'news'
+                });
+              }
+            }
+          });
+          
+          console.log(`从ESPN获取到 ${allNews.length - (allNews.filter(n => n.source === 'NBA Official').length)} 条新闻`);
+        }
+      } catch (espnError) {
+        console.error('抓取ESPN新闻失败:', espnError.message);
+      }
+      
+      console.log(`总共获取到 ${allNews.length} 条NBA新闻`);
+      return allNews.slice(0, 12); // 返回最多12条新闻
+      
     } catch (error) {
       console.error('获取NBA新闻失败:', error.message);
       return [];
